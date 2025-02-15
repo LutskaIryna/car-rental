@@ -1,14 +1,13 @@
-/* eslint-disable prettier/prettier */
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-} from 'typeorm';
+} from "typeorm";
 
-@Entity('users') // Таблица "users" в PostgreSQL
+@Entity("users")
 export class User {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column({ unique: true })

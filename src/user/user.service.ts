@@ -2,14 +2,14 @@ import { Injectable, BadRequestException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "./user.entity";
-import { HashingService } from "src/shared/hashing/hashing.service";
+import { PasswordService } from "src/shared/security/password.service";
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private hashingService: HashingService,
+    private passwordService: PasswordService,
   ) {}
 
   async register(email: string, password: string): Promise<User> {
@@ -20,7 +20,7 @@ export class UserService {
       throw new BadRequestException("Wrong credentials");
     }
 
-    const hashedPassword = await this.hashingService.hashPassword(password);
+    const hashedPassword = await this.passwordService.hashPassword(password);
     const user = this.userRepository.create({
       email,
       password: hashedPassword,

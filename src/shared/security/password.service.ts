@@ -3,7 +3,7 @@ import { randomBytes, pbkdf2 } from "crypto";
 import { promisify } from "util";
 
 @Injectable()
-export class HashingService {
+export class PasswordService {
   private readonly pbkdf2Async = promisify(pbkdf2);
   private readonly iterations = 100000;
   private readonly keyLength = 64;

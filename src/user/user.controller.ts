@@ -7,6 +7,7 @@ import {
   ApiTags,
   ApiResponse,
 } from "@nestjs/swagger";
+import { RegisterDTO } from "./dto/register.dto";
 
 @ApiBearerAuth()
 @ApiTags("auth")
@@ -27,7 +28,7 @@ export class UserController {
     },
   })
   @ApiResponse({ status: 403, description: "Forbidden." })
-  async register(@Body() body: { email: string; password: string }) {
+  async register(@Body() body: RegisterDTO ) {
     const { email, password } = body;
 
     if (!email || !password) {

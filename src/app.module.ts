@@ -1,12 +1,14 @@
 import { Module } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { UserModule } from "./user/user.module";
+import { UserModule } from "./modules/user/user.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { User } from "./user/user.entity";
+import { User } from "./modules/user/user.entity";
+import { AuthModule } from "./modules/auth/auth.module";
 import { APP_GUARD } from "@nestjs/core";
-import { RolesGuard } from "./user/roles/roles.guard";
+import { JwtAuthGuard } from "./modules/auth/guards/jwt-auth.guard";
+import { RolesGuard } from "./modules/user/roles/roles.guard";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,14 +29,22 @@ import { RolesGuard } from "./user/roles/roles.guard";
       }),
     }),
     UserModule,
+    AuthModule,    
+  ],
+  exports:[UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     {
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useClass: JwtAuthGuard,
     },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    }
   ],
 })
 export class AppModule {}

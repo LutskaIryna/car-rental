@@ -1,4 +1,4 @@
-import { Controller, Post, Body, BadRequestException } from "@nestjs/common";
+import { Controller, Post, Body, BadRequestException, UseGuards } from "@nestjs/common";
 import { UserService } from "./user.service";
 import {
   ApiOperation,
@@ -9,14 +9,22 @@ import {
 } from "@nestjs/swagger";
 import { RegisterDTO } from "./dto/register.dto";
 import { Role } from "./roles/roles.enum";
+import { AuthService } from "src/modules/auth/auth.service";
+import { Roles } from "./roles/roles.decorator";
+import { RolesGuard } from "./roles/roles.guard";
+import { Public } from "../auth/public.decorator";
+
 
 @ApiBearerAuth()
-@ApiTags("auth")
-@Controller("auth")
+@ApiTags("user")
+@Controller("user")
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService,
+              private readonly authService: AuthService
+            ) {}
 
   @Post("register")
+  @Public()
   @ApiOperation({ summary: "Register a new user" })
   @ApiBody({
     schema: {
@@ -38,16 +46,15 @@ export class UserController {
     return this.userService.register(email, password, Role.USER);
   }
 
-  @Post('/register-super-admin') // it is not neccessary to have this endpoint in swwager
-  // @UseGuards(RolesGuard)
-  // @Roles(Role.SUPER_ADMIN)
+  @Post('/register-super-admin') // it is not neccessary to have this endpoint in swagger
+  @Public()
   async createSuperAdmin(@Body() { email, password }: { email: string; password: string }) {
     return this.userService.registerAdmin(email, password, Role.SUPER_ADMIN);
   }
 
   @Post('/register-role')
-  // @UseGuards(RolesGuard)
-  // @Roles(Role.SUPER_ADMIN)
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Register a new user with role" })
   @ApiBody({
     schema: {
@@ -68,4 +75,7 @@ export class UserController {
     }
     return this.userService.register(email, password, role);
   }
+
+
 }
+

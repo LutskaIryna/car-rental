@@ -4,12 +4,15 @@ import { User } from "./user.entity";
 import { UserService } from "./user.service";
 import { UserController } from "./user.controller";
 import { PasswordService } from "src/shared/security/password.service";
-import { AuthService } from "src/shared/security/auth.service";
+import { AuthService } from "src/modules/auth/auth.service";
 import { JwtService } from "@nestjs/jwt";
+import { JwtStrategy } from "../auth/strategy/jwt.strategy";
 
 @Module({
   imports: [TypeOrmModule.forFeature([User])],
   controllers: [UserController],
-  providers: [UserService, PasswordService, AuthService, JwtService],
+  providers: [UserService, PasswordService, AuthService, JwtService, JwtStrategy,
+   ],
+  exports: [UserService]
 })
 export class UserModule {}

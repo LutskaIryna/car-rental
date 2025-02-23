@@ -28,11 +28,12 @@ export class AuthController {
   })
   @ApiResponse({ status: 403, description: "Forbidden." })
   async login(@Request() req: {user: IUser}) {
+    console.log(req.user)
     return this.authService.login(req.user);
   }
 
   
-  @UseGuards(LocalAuthGuard)
+  // @UseGuards(LocalAuthGuard)
   @Post('logout')
   @Public()
   @ApiOperation({ summary: "Logout user" })

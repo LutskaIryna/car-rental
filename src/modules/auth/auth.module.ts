@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import {  ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
+import { LocalStrategy } from './strategy/local.strategy';
 
 
 @Module({
@@ -19,9 +20,10 @@ import { AuthController } from './auth.controller';
             signOptions: { expiresIn: '300h' },
           }),
         }),
+    
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, LocalStrategy],
   exports: [AuthService]
 })
 

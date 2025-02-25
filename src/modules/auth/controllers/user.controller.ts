@@ -1,5 +1,5 @@
 import { Controller, Post, Body, BadRequestException, UseGuards } from "@nestjs/common";
-import { UserService } from "./user.service";
+import { UserService } from "../services/user.service";
 import {
   ApiOperation,
   ApiBody,
@@ -7,12 +7,13 @@ import {
   ApiTags,
   ApiResponse,
 } from "@nestjs/swagger";
-import { RegisterDTO } from "./dto/register.dto";
-import { Role } from "./roles/roles.enum";
-import { AuthService } from "src/modules/auth/auth.service";
-import { Roles } from "./roles/roles.decorator";
-import { RolesGuard } from "./roles/roles.guard";
-import { Public } from "../auth/public.decorator";
+import { RegisterDTO } from "../dto/register.dto";
+import { Role } from "../enums/roles.enum";
+import { AuthService } from "../services/auth.service";
+import { Roles } from "../decorators/roles.decorator";
+import { RolesGuard } from "../guards/roles.guard";
+import { Public } from "../decorators/public.decorator";
+import { JwtAuthGuard } from "../guards/jwt-auth.guard";
 
 
 @ApiBearerAuth()
@@ -53,7 +54,7 @@ export class UserController {
   }
 
   @Post('/register-role')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Register a new user with role" })
   @ApiBody({

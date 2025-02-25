@@ -1,9 +1,9 @@
 import { Injectable, BadRequestException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { User } from "./user.entity";
-import { PasswordService } from "src/shared/security/password.service";
-import { Role } from "./roles/roles.enum";
+import { User } from "../entities/user.entity";
+import { PasswordService } from "src/modules/auth/services/password.service";
+import { Role } from "../enums/roles.enum";
 
 @Injectable()
 export class UserService {
@@ -46,9 +46,22 @@ export class UserService {
     }
     return null;
   }
+
+  async validateRefreshToken(userId: string, refreshToken: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user || !user.refreshToken) return false;  
+    return this.passwordService.verifyPassword(refreshToken, user.refreshToken) // Сравниваем хеши
+  }
   
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { email } });
   }
 
+  async save(user: Partial<User>): Promise<User> {
+    return this.userRepository.save(user);
+  }
+
+  async update(user: Partial<User>) {
+    return await this.userRepository.update(user.id as string, user);
+  }
 }

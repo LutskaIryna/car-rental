@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { randomBytes, pbkdf2 } from "crypto";
 import { promisify } from "util";
+import { User } from "../entities/user.entity";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class PasswordService {
@@ -8,6 +10,8 @@ export class PasswordService {
   private readonly iterations = 100000;
   private readonly keyLength = 64;
   private readonly digest = "sha512";
+
+  constructor(private jwtService: JwtService){}
 
   async hashPassword(password: string): Promise<string> {
     const salt = randomBytes(16).toString("hex");
@@ -31,5 +35,11 @@ export class PasswordService {
       this.digest,
     );
     return hash === derivedKey.toString("hex");
+  }
+
+  async getHashedAccessToken(user: User ): Promise<string> {
+    const payload = { id: user.id, email: user.email, role: user.role };
+    const accessToken = this.jwtService.sign(payload);
+    return this.hashPassword(accessToken);
   }
 }

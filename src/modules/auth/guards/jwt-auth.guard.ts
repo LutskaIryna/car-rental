@@ -1,32 +1,32 @@
-import { ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { AuthGuard } from '@nestjs/passport';
-import { IS_PUBLIC_KEY } from '../public.decorator';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(private reflector: Reflector) {
-    super();
-  }
-private readonly logger = new Logger(JwtAuthGuard.name);
-  canActivate(context: ExecutionContext) {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+export class JwtAuthGuard implements CanActivate {
+  constructor(private configService: ConfigService) {}
 
-    if (isPublic) {
-      return true;
+  canActivate(context: ExecutionContext): boolean {
+    const request = context.switchToHttp().getRequest<Request>();
+
+    // Extract JWT from Authorization header
+    const authHeader = request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Missing or invalid token');
     }
 
-    return super.canActivate(context);
-  }
+    const token = authHeader.split(' ')[1]; // Extract the token
+    try {
+      // Verify token using jsonwebtoken
+      const secret = this.configService.get<string>('JWT_SECRET');
+      const decoded = jwt.verify(token, secret || '');
 
-  handleRequest(err, user): any{
-    if (err || !user) {
-      throw new UnauthorizedException('Invalid or missing token');
+      // Attach user info to the request
+      request.user = decoded;
+      return true; // Allow request
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
     }
-    this.logger.log(user);
-    return user;
   }
 }

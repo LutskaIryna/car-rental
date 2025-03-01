@@ -6,6 +6,8 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { User } from "./modules/auth/entities/user.entity";
 import { AuthModule } from "./modules/auth/auth.module";
 import { ProfileModule } from "./modules/profile/profile.module";
+import { RentalCarsModule } from "./modules/rental-cars/rental-cars.module";
+import { RentalCar } from "./modules/rental-cars/entities/rental-car.entity";
 
 @Module({
   imports: [
@@ -22,11 +24,12 @@ import { ProfileModule } from "./modules/profile/profile.module";
         username: configService.get<string>("DATABASE_USER"),
         password: configService.get<string>("DATABASE_PASSWORD"),
         database: configService.get<string>("DATABASE_NAME"),
-        entities: [User],
+        entities: [User, RentalCar],
         synchronize: true,
       }),
     }),
     AuthModule,
+    RentalCarsModule,
     ProfileModule  
   ],
   exports:[

@@ -12,7 +12,7 @@ import { User } from "./entities/user.entity";
 
 @Module({
   imports: [ 
-    JwtModule.registerAsync({
+     JwtModule.registerAsync({
           imports: [ConfigModule],
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => ({

@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
 } from "typeorm";
+import { Role } from "../enums/roles.enum";
 
 @Entity("users")
 export class User {
@@ -18,4 +19,17 @@ export class User {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.USER,
+  })
+  role: Role;
+
+  @Column({  type: 'text', nullable: true })
+  token: string | null;
+
+  @Column({  type: 'text', nullable: true })
+  refreshToken: string | null;
 }

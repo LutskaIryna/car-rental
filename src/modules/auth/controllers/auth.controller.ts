@@ -1,11 +1,13 @@
-import { Controller, Post, Body, UnauthorizedException, Res, Req } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, Res, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
 import { UserService } from '../services/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../entities/user.entity';
-import { Request, Response } from 'express';
+import { Response, Request } from 'express';
+import ms, { StringValue } from 'ms'
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 
 @ApiBearerAuth()
@@ -41,31 +43,33 @@ export class AuthController {
       throw new UnauthorizedException("Invalid email or password");
     }
     const tokens = await this.authService.login(user);
-    res.setHeader('Set-Cookie', `refresh_token=${tokens.refresh_token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}`);
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const refreshTokenAge = ms(this.configService.get<string>('EXPIRES_IN_REFRESH_TOKEN') as StringValue) / 1000;
+    res.setHeader(
+      'Set-Cookie',
+      `refresh_token=${tokens.refresh_token}; HttpOnly; Path=/; Max-Age=${refreshTokenAge}`
+    );
   
-    return res.json({access_token: tokens.access_token, rft: tokens.refresh_token})
+    return res.json({access_token: tokens.access_token})
   }
 
-
   @Post('logout')
-  @ApiOperation({ summary: "Logout user" })
-  async logout(@Body() body: Request & { user?: { id: string } }, @Res({ passthrough: true }) res: Response) {
-      const userId = body.user?.id; // Extract user ID from JWT payload
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() req: Request & { user?: { id: string } }, @Res({ passthrough: true }) res: Response) {
+    const userId = req.user?.id;
 
       if (!userId) {
           throw new UnauthorizedException("User not authenticated");
       }
   
-      // Clear refresh token cookie
       res.cookie('refresh_token', '', {
           httpOnly: true,
           path: '/',
           maxAge: 0
       });
   
-      // Call logout function in AuthService
       await this.authService.logout(userId);
-  
       return { message: 'Logged out successfully' };
   }
 
@@ -77,12 +81,7 @@ export class AuthController {
         throw new UnauthorizedException('No cookies found');
       }
 
-      const cookies: Record<string, string> = Object.fromEntries(
-        cookieHeader.split('; ').map((c: string): [string, string] => {
-          const [key, value] = c.split('=');
-          return [key.trim(), value ? decodeURIComponent(value) : ''];
-        })
-      );
+      const cookies = this.authService.getCookies(cookieHeader);
       const refreshToken = cookies['refresh_token'];
 
       if (!refreshToken) {
@@ -94,12 +93,22 @@ export class AuthController {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
     });
 
-    const isValid = await this.userService.validateRefreshToken(payload.id, refreshToken);
+    const existingRefreshToken = await this.userService.getUserRefreshToken(payload.id);
 
-    if (!isValid) throw new UnauthorizedException('Invalid refresh token');
+    if (existingRefreshToken !== refreshToken) throw new UnauthorizedException('Invalid refresh token');
 
     const tokens = await this.authService.login(payload as User);
-    res.setHeader('Set-Cookie', `refresh_token=${tokens.refresh_token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}`);
+
+    const expiresInRefreshToken = this.configService.get<string>('EXPIRES_IN_REFRESH_TOKEN');
+    if (!expiresInRefreshToken) {
+      throw new Error('EXPIRES_IN_REFRESH_TOKEN is not defined in the configuration');
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const refreshTokenAge: number = ms(expiresInRefreshToken as StringValue) / 1000;
+    res.setHeader(
+      'Set-Cookie',
+      `refresh_token=${tokens.refresh_token}; HttpOnly; Path=/; Max-Age=${refreshTokenAge}`
+    );
   
     return res.json({access_token: tokens.access_token})
   }

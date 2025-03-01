@@ -47,10 +47,10 @@ export class UserService {
     return null;
   }
 
-  async validateRefreshToken(userId: string, refreshToken: string): Promise<boolean> {
+  async getUserRefreshToken(userId: string): Promise<string | null> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user || !user.refreshToken) return false;  
-    return this.passwordService.verifyPassword(refreshToken, user.refreshToken) // Сравниваем хеши
+    if (!user || !user.refreshToken) return null;  
+    return user.refreshToken
   }
   
   async findByEmail(email: string): Promise<User | null> {

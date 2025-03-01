@@ -45,7 +45,7 @@ export class AuthController {
     const tokens = await this.authService.login(user);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const refreshTokenAge = ms(this.configService.get<string>('EXPIRES_IN_REFRESH_TOKEN') as StringValue) / 1000;
+    const refreshTokenAge = +ms(this.configService.get<string>('EXPIRES_IN_REFRESH_TOKEN') as StringValue);
     res.setHeader(
       'Set-Cookie',
       `refresh_token=${tokens.refresh_token}; HttpOnly; Path=/; Max-Age=${refreshTokenAge}`
@@ -58,18 +58,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async logout(@Req() req: Request & { user?: { id: string } }, @Res({ passthrough: true }) res: Response) {
     const userId = req.user?.id;
-
-      if (!userId) {
-          throw new UnauthorizedException("User not authenticated");
-      }
-  
-      res.cookie('refresh_token', '', {
+ 
+    res.cookie('refresh_token', '', {
           httpOnly: true,
           path: '/',
           maxAge: 0
-      });
+    });
   
-      await this.authService.logout(userId);
+      await this.authService.logout(userId as string);
       return { message: 'Logged out successfully' };
   }
 
@@ -104,7 +100,7 @@ export class AuthController {
       throw new Error('EXPIRES_IN_REFRESH_TOKEN is not defined in the configuration');
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    const refreshTokenAge: number = ms(expiresInRefreshToken as StringValue) / 1000;
+    const refreshTokenAge: number = +ms(expiresInRefreshToken as StringValue);
     res.setHeader(
       'Set-Cookie',
       `refresh_token=${tokens.refresh_token}; HttpOnly; Path=/; Max-Age=${refreshTokenAge}`

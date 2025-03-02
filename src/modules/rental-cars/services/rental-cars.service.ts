@@ -32,7 +32,6 @@ export class RentalCarsService {
   }
 
   async remove(id: string): Promise<string> {
-    console.log({id})
     const result = await this.carRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Car with id ${id} not found`);

@@ -8,6 +8,8 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { ProfileModule } from "./modules/profile/profile.module";
 import { RentalCarsModule } from "./modules/rental-cars/rental-cars.module";
 import { RentalCar } from "./modules/rental-cars/entities/rental-car.entity";
+import { RentalData } from "./modules/rental-data/entity/rental-data.entity";
+import { RentalDataModule } from "./modules/rental-data/rental-data.module";
 
 @Module({
   imports: [
@@ -24,12 +26,13 @@ import { RentalCar } from "./modules/rental-cars/entities/rental-car.entity";
         username: configService.get<string>("DATABASE_USER"),
         password: configService.get<string>("DATABASE_PASSWORD"),
         database: configService.get<string>("DATABASE_NAME"),
-        entities: [User, RentalCar],
+        entities: [User, RentalCar, RentalData],
         synchronize: true,
       }),
     }),
     AuthModule,
     RentalCarsModule,
+    RentalDataModule,
     ProfileModule  
   ],
   exports:[

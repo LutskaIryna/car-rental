@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RentalCar } from '../entities/rental-car.entity';
@@ -6,38 +6,28 @@ import { CreateCarDto, UpdateCarDto } from '../dto/car.dto';
 
 @Injectable()
 export class RentalCarsService {
-
   constructor(
     @InjectRepository(RentalCar)
-    private carRepository: Repository<RentalCar>,
+    private carRepository: Repository<RentalCar>
   ) {}
 
   async create(createCarDto: CreateCarDto): Promise<RentalCar> {
-    try {
-      const car = this.carRepository.create(createCarDto);
-      return await this.carRepository.save(car);
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (error.code === '23505') { // 23505 is the unique violation error code in PostgreSQL
-        throw new ConflictException('A car with this VIN or Plate Number already exists.');
-      }
-      throw error;
-    }
+    const car = this.carRepository.create(createCarDto);
+    return await this.carRepository.save(car);
   }
 
   async update(id: string, updateCarDto: UpdateCarDto): Promise<RentalCar> {
     const car = await this.findOne(id);
-    Object.assign(car, updateCarDto);
+    this.carRepository.merge(car, updateCarDto);
     return this.carRepository.save(car);
   }
 
-  async remove(id: string): Promise<string> {
-    console.log({id})
+  async remove(id: string): Promise<{ message: string; error: null }> {
     const result = await this.carRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Car with id ${id} not found`);
     }
-    return 'Car deleted'
+    return { message: 'Car deleted', error: null };
   }
 
   async findAll(): Promise<RentalCar[]> {

@@ -8,7 +8,6 @@ import {
 import { UserService } from '../services/user.service';
 import {
   ApiOperation,
-  ApiBody,
   ApiBearerAuth,
   ApiTags,
   ApiResponse,
@@ -33,16 +32,6 @@ export class UserController {
   @Post('register')
   @Public()
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: { type: 'string', example: 'user@example.com' },
-        password: { type: 'string', example: 'password123' },
-      },
-      required: ['email', 'password'],
-    },
-  })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   async register(@Body() body: RegisterDTO) {
     const { email, password } = body;
@@ -51,14 +40,6 @@ export class UserController {
       throw new BadRequestException('Email and password are required');
     }
     return this.userService.register(email, password, Role.USER);
-  }
-
-  @Post('/register-super-admin') // it is not neccessary to have this endpoint in swagger
-  @Public()
-  async createSuperAdmin(
-    @Body() { email, password }: { email: string; password: string }
-  ) {
-    return this.userService.registerAdmin(email, password, Role.SUPER_ADMIN);
   }
 
   @Post('/register-role')

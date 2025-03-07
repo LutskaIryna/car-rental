@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
@@ -16,6 +17,7 @@ import { Role } from 'src/modules/auth/enums/roles.enum';
 import { RentalDataDto, UpdateRentalDto } from '../dto/rental-data.dto';
 import { RentalData } from '../entity/rental-data.entity';
 import { Request } from 'express';
+import { RentalCar } from 'src/modules/rental-cars/entities/rental-car.entity';
 
 @Controller('rental')
 export class RentalDataController {
@@ -47,5 +49,31 @@ export class RentalDataController {
     const userId = req.user?.id || '';
 
     return this.rentalService.updateRental(rentalId, userId, dto);
+  }
+
+  @Get('/rented')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Get all rented cars (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of rented cars',
+    type: [RentalData],
+  })
+  async getAllRentedCars(): Promise<RentalCar[]> {
+    return this.rentalService.getFilteredCars(false);
+  }
+
+  @Get('/available')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.USER)
+  @ApiOperation({ summary: 'Get all available cars' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of available cars',
+    type: [RentalData],
+  })
+  async getAllAvailableCars(): Promise<RentalCar[]> {
+    return this.rentalService.getFilteredCars(true);
   }
 }

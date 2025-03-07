@@ -7,7 +7,7 @@ import {
 import { RentalDataDto, UpdateRentalDto } from '../dto/rental-data.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RentalData } from '../entity/rental-data.entity';
-import { Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { RentalCar } from 'src/modules/rental-cars/entities/rental-car.entity';
 
 @Injectable()
@@ -65,5 +65,19 @@ export class RentalDataService {
     }
     this.rentalRepository.merge(rental, dto);
     return this.rentalRepository.save(rental);
+  }
+
+  async getFilteredCars(isAvailableCars: boolean): Promise<RentalCar[]> {
+    const rentedCars = await this.rentalRepository.find({
+      where: { isActive: true },
+      select: ['carId'],
+    });
+    const carIds = rentedCars.map((rental) => rental.carId);
+
+    if (isAvailableCars) {
+      return this.carRepository.find({ where: { id: Not(In(carIds)) } });
+    }
+
+    return this.carRepository.find({ where: { id: In(carIds) } });
   }
 }

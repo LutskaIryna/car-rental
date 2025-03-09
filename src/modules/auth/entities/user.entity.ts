@@ -3,12 +3,12 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-} from "typeorm";
-import { Role } from "../enums/roles.enum";
+} from 'typeorm';
+import { Role } from '../enums/roles.enum';
 
-@Entity("users")
+@Entity('users')
 export class User {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ unique: true })
@@ -27,9 +27,9 @@ export class User {
   })
   role: Role;
 
-  @Column({  type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: true })
   token: string | null;
 
-  @Column({  type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: true })
   refreshToken: string | null;
 }

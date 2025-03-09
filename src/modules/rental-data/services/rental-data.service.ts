@@ -67,17 +67,28 @@ export class RentalDataService {
     return this.rentalRepository.save(rental);
   }
 
-  async getFilteredCars(isAvailableCars: boolean): Promise<RentalCar[]> {
+  async getFilteredCars(
+    isAvailableCars: boolean,
+    filters?: Partial<RentalCar>
+  ): Promise<RentalCar[]> {
     const rentedCars = await this.rentalRepository.find({
       where: { isActive: true },
       select: ['carId'],
     });
     const carIds = rentedCars.map((rental) => rental.carId);
 
-    if (isAvailableCars) {
-      return this.carRepository.find({ where: { id: Not(In(carIds)) } });
+    const whereClause: { [key: string]: any } = isAvailableCars
+      ? { id: Not(In(carIds)) }
+      : { id: In(carIds) };
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+          whereClause[key] = value;
+        }
+      });
     }
 
-    return this.carRepository.find({ where: { id: In(carIds) } });
+    return this.carRepository.find({ where: whereClause });
   }
 }

@@ -9,7 +9,7 @@ export class RentalCar {
   vin: string;
 
   @Column({ type: 'text', nullable: true })
-  brend: string;
+  brand: string;
 
   @Column()
   model: string;

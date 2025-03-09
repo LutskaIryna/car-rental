@@ -79,7 +79,7 @@ export class RentalDataController {
   @Roles(Role.ADMIN, Role.USER)
   @ApiOperation({ summary: 'Get all available cars' })
   @ApiQuery({ name: 'vin', required: false, type: String })
-  @ApiQuery({ name: 'brend', required: false, type: String })
+  @ApiQuery({ name: 'brand', required: false, type: String })
   @ApiQuery({ name: 'model', required: false, type: String })
   @ApiQuery({ name: 'color', required: false, type: String })
   @ApiQuery({ name: 'plateNumber', required: false, type: String })

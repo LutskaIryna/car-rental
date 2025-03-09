@@ -10,7 +10,7 @@ export class CreateCarDto {
   @ApiProperty({ example: 'Skoda' })
   @IsString()
   @IsNotEmpty()
-  brend: string;
+  brand: string;
 
   @ApiProperty({ example: 'Octavia' })
   @IsString()

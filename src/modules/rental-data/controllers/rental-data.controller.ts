@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -27,7 +28,11 @@ export class RentalDataController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.USER)
   @ApiOperation({ summary: 'Create a new rental' })
-  @ApiResponse({ status: 201, description: 'Rental created', type: RentalData })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Rental created',
+    type: RentalData,
+  })
   async createRental(
     @Body() dto: Omit<RentalDataDto, 'userId'>,
     @Req() req: Request & { user?: { id: string } }
@@ -40,7 +45,11 @@ export class RentalDataController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Update an existing rental' })
-  @ApiResponse({ status: 200, description: 'Rental updated', type: RentalData })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Rental updated',
+    type: RentalData,
+  })
   async updateRental(
     @Param('id') rentalId: string,
     @Body() dto: UpdateRentalDto,
@@ -56,7 +65,7 @@ export class RentalDataController {
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Get all rented cars (Admin only)' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'List of rented cars',
     type: [RentalData],
   })
@@ -69,7 +78,7 @@ export class RentalDataController {
   @Roles(Role.ADMIN, Role.USER)
   @ApiOperation({ summary: 'Get all available cars' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'List of available cars',
     type: [RentalData],
   })

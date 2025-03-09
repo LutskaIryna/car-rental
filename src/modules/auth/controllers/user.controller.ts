@@ -4,6 +4,7 @@ import {
   Body,
   BadRequestException,
   UseGuards,
+  HttpStatus,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import {
@@ -32,7 +33,7 @@ export class UserController {
   @Post('register')
   @Public()
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
   async register(@Body() body: RegisterDTO) {
     const { email, password } = body;
 
@@ -46,7 +47,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: 'Register a new user with role' })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
   async createUserWithRole(
     @Body()
     { email, password, role }: { email: string; password: string; role: Role }

@@ -6,6 +6,7 @@ import {
   Res,
   Req,
   UseGuards,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -46,7 +47,7 @@ export class AuthController {
       required: ['email', 'password'],
     },
   })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
   async login(
     @Body() { email, password }: { email: string; password: string },
     @Res() res: Response

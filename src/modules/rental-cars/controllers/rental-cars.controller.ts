@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   Post,
   UseGuards,
@@ -33,10 +34,14 @@ export class RentalCarsController {
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Create a new car' })
   @ApiResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden: Only admins can create cars',
   })
-  @ApiResponse({ status: 201, description: 'Car created', type: RentalCar })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Car created',
+    type: RentalCar,
+  })
   async create(@Body() createCarDto: CreateCarDto): Promise<RentalCar> {
     return this.carService.create(createCarDto);
   }
@@ -46,10 +51,10 @@ export class RentalCarsController {
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Delete a car' })
   @ApiResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden: Only admins can delete cars',
   })
-  @ApiResponse({ status: 204, description: 'Car deleted' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Car deleted' })
   @ApiParam({
     name: 'id',
     example: 'a3b1c2d3-e456-7890-abcd-1234567890ab',
@@ -66,12 +71,12 @@ export class RentalCarsController {
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Get all cars' })
   @ApiResponse({
-    status: 200,
+    status: HttpStatus.OK,
     description: 'List of all cars',
     type: [RentalCar],
   })
   @ApiResponse({
-    status: 403,
+    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden: Only admins can access this',
   })
   async findAll(): Promise<RentalCar[]> {

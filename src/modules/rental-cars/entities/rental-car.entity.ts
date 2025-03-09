@@ -1,22 +1,25 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity("cars")
+@Entity('cars')
 export class RentalCar {
-  @PrimaryGeneratedColumn("uuid")
-    id: string;
-    
-  @Column({ unique: true })
-    vin: string;
-
-  @Column()
-    model: string;
-  
-  @Column()
-    color: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ unique: true })
-    plateNumber: string;
-  
+  vin: string;
+
+  @Column({ type: 'text', nullable: true })
+  brend: string;
+
   @Column()
-    year: string;
+  model: string;
+
+  @Column()
+  color: string;
+
+  @Column({ unique: true })
+  plateNumber: string;
+
+  @Column()
+  year: string;
 }

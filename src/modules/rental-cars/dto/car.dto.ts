@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from 'class-validator';
 
@@ -9,6 +8,11 @@ export class CreateCarDto {
   vin: string;
 
   @ApiProperty({ example: 'Skoda' })
+  @IsString()
+  @IsNotEmpty()
+  brend: string;
+
+  @ApiProperty({ example: 'Octavia' })
   @IsString()
   @IsNotEmpty()
   model: string;

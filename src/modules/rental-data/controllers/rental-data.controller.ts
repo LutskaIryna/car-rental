@@ -6,13 +6,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { RentalDataService } from '../services/rental-data.service';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { Roles } from 'src/modules/auth/decorators/roles.decorator';
 import { Role } from 'src/modules/auth/enums/roles.enum';
 import { RentalDataDto, UpdateRentalDto } from '../dto/rental-data.dto';
@@ -77,12 +78,20 @@ export class RentalDataController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.USER)
   @ApiOperation({ summary: 'Get all available cars' })
+  @ApiQuery({ name: 'vin', required: false, type: String })
+  @ApiQuery({ name: 'brend', required: false, type: String })
+  @ApiQuery({ name: 'model', required: false, type: String })
+  @ApiQuery({ name: 'color', required: false, type: String })
+  @ApiQuery({ name: 'plateNumber', required: false, type: String })
+  @ApiQuery({ name: 'year', required: false, type: String })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'List of available cars',
     type: [RentalData],
   })
-  async getAllAvailableCars(): Promise<RentalCar[]> {
-    return this.rentalService.getFilteredCars(true);
+  async getAllAvailableCars(
+    @Query() queryParams: Partial<RentalCar>
+  ): Promise<RentalCar[]> {
+    return this.rentalService.getFilteredCars(true, queryParams);
   }
 }

@@ -1,5 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
-
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity('rentals')
 export class RentalData {
@@ -18,7 +22,7 @@ export class RentalData {
   @Column({ type: 'timestamp', nullable: true })
   endDate: Date;
 
-  @Column({ type: 'boolean', default: true }) 
+  @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
   @CreateDateColumn()

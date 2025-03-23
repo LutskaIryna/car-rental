@@ -7,8 +7,8 @@ import {
 import { RentalDataDto, UpdateRentalDto } from '../dto/rental-data.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RentalData } from '../entity/rental-data.entity';
-import { In, Not, Repository } from 'typeorm';
 import { RentalCar } from 'src/modules/rental-cars/entities/rental-car.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class RentalDataService {
@@ -69,7 +69,7 @@ export class RentalDataService {
 
   async getFilteredCars(
     isAvailableCars: boolean,
-    filters?: Partial<RentalCar>
+    filters?: Partial<RentalCar> & { query?: string }
   ): Promise<RentalCar[]> {
     const rentedCars = await this.rentalRepository.find({
       where: { isActive: true },
@@ -77,18 +77,42 @@ export class RentalDataService {
     });
     const carIds = rentedCars.map((rental) => rental.carId);
 
-    const whereClause: { [key: string]: any } = isAvailableCars
-      ? { id: Not(In(carIds)) }
-      : { id: In(carIds) };
+    const qb = this.carRepository.createQueryBuilder('car');
+
+    if (isAvailableCars) {
+      qb.where('car.id NOT IN (:...carIds)', {
+        carIds: carIds.length
+          ? carIds
+          : ['00000000-0000-0000-0000-000000000000'],
+      });
+    } else {
+      qb.where('car.id IN (:...carIds)', { carIds });
+    }
 
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          whereClause[key] = value;
+        if (value && key !== 'query') {
+          qb.andWhere(`car.${key} ILIKE :${key}`, {
+            [key]: `%${value}%`,
+          });
         }
       });
+
+      if (filters.query) {
+        const searchInput = filters.query.trim();
+        if (searchInput.length > 0) {
+          const terms = searchInput
+            .split(/\s+/)
+            .map((term) => `${term}:*`)
+            .join(' & ');
+
+          qb.andWhere(`car.search_vector @@ to_tsquery('simple', :query)`, {
+            query: terms,
+          });
+        }
+      }
     }
 
-    return this.carRepository.find({ where: whereClause });
+    return qb.getMany();
   }
 }

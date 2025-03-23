@@ -84,6 +84,7 @@ export class RentalDataController {
   @ApiQuery({ name: 'color', required: false, type: String })
   @ApiQuery({ name: 'plateNumber', required: false, type: String })
   @ApiQuery({ name: 'year', required: false, type: String })
+  @ApiQuery({ name: 'query', required: false, type: String })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'List of available cars',

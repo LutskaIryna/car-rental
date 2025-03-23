@@ -22,4 +22,7 @@ export class RentalCar {
 
   @Column()
   year: string;
+
+  @Column({ select: false, type: 'tsvector', nullable: true })
+  search_vector: string;
 }

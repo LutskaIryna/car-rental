@@ -16,5 +16,5 @@ export const AppDataSource = new DataSource({
   entities: [User, RentalCar, RentalData],
   migrations: ['dist/migrations/*.js'], // Use compiled migrations
   synchronize: false, // Use migrations instead of synchronize
-  logging: true,
+  // logging: true,
 });

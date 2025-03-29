@@ -15,7 +15,6 @@ export class SearchVector21743234190862 implements MigrationInterface {
       USING GIN ("search_vector")
     `);
 
-    // Если у тебя есть функция + триггер — добавим их:
     await queryRunner.query(`
       CREATE OR REPLACE FUNCTION update_search_vector()
       RETURNS trigger AS $$

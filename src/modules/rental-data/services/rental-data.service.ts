@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RentalData } from '../entity/rental-data.entity';
 import { RentalCar } from 'src/modules/rental-cars/entities/rental-car.entity';
 import { Repository } from 'typeorm';
+import { StringUtil } from 'src/shared/utils/string-util/string-util';
 
 @Injectable()
 export class RentalDataService {
@@ -69,7 +70,7 @@ export class RentalDataService {
 
   async getFilteredCars(
     isAvailableCars: boolean,
-    filters?: Partial<RentalCar> & { query?: string }
+    filters: Partial<RentalCar> & { query?: string } = {}
   ): Promise<RentalCar[]> {
     const rentedCars = await this.rentalRepository.find({
       where: { isActive: true },
@@ -89,28 +90,22 @@ export class RentalDataService {
       qb.where('car.id IN (:...carIds)', { carIds });
     }
 
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && key !== 'query') {
-          qb.andWhere(`car.${key} ILIKE :${key}`, {
-            [key]: `%${value}%`,
-          });
-        }
-      });
+    const { query, ...restFilters } = filters;
 
-      if (filters.query) {
-        const searchInput = filters.query.trim();
-        if (searchInput.length > 0) {
-          const terms = searchInput
-            .split(/\s+/)
-            .map((term) => `${term}:*`)
-            .join(' & ');
-
-          qb.andWhere(`car.search_vector @@ to_tsquery('simple', :query)`, {
-            query: terms,
-          });
-        }
+    Object.entries(restFilters).forEach(([key, value]) => {
+      if (value) {
+        qb.andWhere(`car.${key} ILIKE :${key}`, {
+          [key]: `%${value}%`,
+        });
       }
+    });
+
+    const searchTerms = StringUtil.createSearchTerms(query || '');
+
+    if (searchTerms) {
+      qb.andWhere(`car.search_vector @@ to_tsquery('simple', :query)`, {
+        query: searchTerms,
+      });
     }
 
     return qb.getMany();

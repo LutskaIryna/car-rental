@@ -18,7 +18,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: process.env.FE_LOCALHOST_PORT ?? 'http://localhost:3000',
     credentials: true, // for cookie
   });
 

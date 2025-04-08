@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '../enums/roles.enum';
-import { IsString, IsEmail, MinLength } from 'class-validator';
+import { IsString, IsEmail, MinLength, IsOptional } from 'class-validator';
 
 export class RegisterDTO {
   @ApiProperty({ example: 'user@example.com' })
@@ -14,6 +13,7 @@ export class RegisterDTO {
   password: string;
 
   @ApiProperty({ example: 'user' })
+  @IsOptional()
   @IsString()
   role: Role;
 }

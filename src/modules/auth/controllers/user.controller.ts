@@ -5,6 +5,9 @@ import {
   BadRequestException,
   UseGuards,
   HttpStatus,
+  Get,
+  Req,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import {
@@ -56,5 +59,21 @@ export class UserController {
       throw new BadRequestException('Invalid role');
     }
     return this.userService.register(email, password, role);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getMe(@Req() req: Request & { user?: { email: string } }) {
+    const email = req.user?.email || '';
+    const user = await this.userService.findByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { token, refreshToken, password, ...safeUser } = user;
+
+    return safeUser;
   }
 }

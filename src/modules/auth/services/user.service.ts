@@ -1,29 +1,29 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { User } from "../entities/user.entity";
-import { PasswordService } from "src/modules/auth/services/password.service";
-import { Role } from "../enums/roles.enum";
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities/user.entity';
+import { PasswordService } from 'src/modules/auth/services/password.service';
+import { Role } from '../enums/roles.enum';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private passwordService: PasswordService,
+    private passwordService: PasswordService
   ) {}
 
   async register(email: string, password: string, role?: Role): Promise<User> {
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
-      throw new BadRequestException("Wrong credentials");
+      throw new BadRequestException('Wrong credentials');
     }
 
     const hashedPassword = await this.passwordService.hashPassword(password);
     const user = this.userRepository.create({
       email,
       password: hashedPassword,
-      role
+      role,
     });
     return this.userRepository.save(user);
   }
@@ -33,7 +33,7 @@ export class UserService {
       where: { role: Role.SUPER_ADMIN },
     });
     if (existingSuperAdmin) {
-      throw new BadRequestException("This user already exists");
+      throw new BadRequestException('This user already exists');
     }
 
     return await this.register(email, password, role);
@@ -41,7 +41,10 @@ export class UserService {
 
   async validateUser(email: string, pass: string): Promise<User | null> {
     const user = await this.findByEmail(email);
-    if (user && await this.passwordService.verifyPassword(pass, user.password)) {
+    if (
+      user &&
+      (await this.passwordService.verifyPassword(pass, user.password))
+    ) {
       return user;
     }
     return null;
@@ -49,10 +52,10 @@ export class UserService {
 
   async getUserRefreshToken(userId: string): Promise<string | null> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user || !user.refreshToken) return null;  
-    return user.refreshToken
+    if (!user || !user.refreshToken) return null;
+    return user.refreshToken;
   }
-  
+
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { email } });
   }

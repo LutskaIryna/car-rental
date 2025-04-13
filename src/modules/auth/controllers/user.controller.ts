@@ -76,4 +76,13 @@ export class UserController {
 
     return safeUser;
   }
+
+  @Get('')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
+  async getUsers() {
+    return this.userService.getUsers();
+  }
 }

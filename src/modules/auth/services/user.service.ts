@@ -50,6 +50,10 @@ export class UserService {
     return null;
   }
 
+  async getUsers(): Promise<User[]> {
+    return this.userRepository.find();
+  }
+
   async getUserRefreshToken(userId: string): Promise<string | null> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user || !user.refreshToken) return null;

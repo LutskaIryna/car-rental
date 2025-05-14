@@ -110,4 +110,14 @@ export class RentalDataService {
 
     return qb.getMany();
   }
+
+  async getActiveRentalByUser(userId: string): Promise<RentalData[]> {
+    return this.rentalRepository.find({
+      where: {
+        userId,
+        isActive: true,
+      },
+      relations: ['car'],
+    });
+  }
 }

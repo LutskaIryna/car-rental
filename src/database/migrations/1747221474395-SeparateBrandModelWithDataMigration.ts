@@ -56,7 +56,7 @@ export class SeparateBrandModelWithDataMigration1747221474395
       })
     );
 
-    // 3. add brand_id и model_id into car table
+    // 3. Add brand_id and model_id into cars
     await queryRunner.addColumn(
       'cars',
       new TableColumn({
@@ -95,46 +95,7 @@ export class SeparateBrandModelWithDataMigration1747221474395
       })
     );
 
-    // 4. insert uniq brands
-    await queryRunner.query(`
-      INSERT INTO brands (id, name)
-      SELECT gen_random_uuid(), DISTINCT brand
-      FROM cars
-      WHERE brand IS NOT NULL
-    `);
-
-    // 5. inser uniq pairs (model, brand)
-    await queryRunner.query(`
-      INSERT INTO models (id, name, brand_id)
-      SELECT
-        gen_random_uuid(),
-        car.model,
-        b.id
-      FROM (
-        SELECT DISTINCT model, brand
-        FROM cars
-        WHERE model IS NOT NULL AND brand IS NOT NULL
-      ) car
-      JOIN brands b ON b.name = car.brand
-    `);
-
-    // 6. fill brand_id и model_id вin car table
-    await queryRunner.query(`
-      UPDATE cars
-      SET brand_id = b.id
-      FROM brands b
-      WHERE cars.brand = b.name
-    `);
-
-    await queryRunner.query(`
-      UPDATE cars
-      SET model_id = m.id
-      FROM models m
-      JOIN brands b ON m.brand_id = b.id
-      WHERE cars.model = m.name AND cars.brand = b.name
-    `);
-
-    // 7. delete old columns
+    // 4. Remove old columns
     await queryRunner.dropColumn('cars', 'brand');
     await queryRunner.dropColumn('cars', 'model');
   }

@@ -2,16 +2,20 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpStatus,
   Param,
   Post,
+  Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -22,16 +26,22 @@ import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
 import { CreateCarDto } from '../dto/car.dto';
 import { RentalCar } from '../entities/rental-car.entity';
 import { RentalCarsService } from '../services/rental-cars.service';
+import { RentalDataService } from 'src/modules/rental-data/services/rental-data.service';
+import { RentalStateOfCar } from '../enums/enums';
+import { Request } from 'express';
 
 @ApiBearerAuth()
 @ApiTags('rental-cars')
 @Controller('rental-cars')
 export class RentalCarsController {
-  constructor(private readonly carService: RentalCarsService) {}
+  constructor(
+    private readonly carService: RentalCarsService,
+    private readonly rentalService: RentalDataService
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiOperation({ summary: 'Create a new car' })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
@@ -48,7 +58,7 @@ export class RentalCarsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiOperation({ summary: 'Delete a car' })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
@@ -67,19 +77,53 @@ export class RentalCarsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Get all cars' })
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Get cars with optional filter (available/rented/all)',
+  })
+  @ApiQuery({
+    name: 'filter',
+    enum: [
+      RentalStateOfCar.AVAILABLE,
+      RentalStateOfCar.RENTED,
+      RentalStateOfCar.ALL,
+    ],
+    required: false,
+  })
+  @ApiQuery({ name: 'vin', required: false, type: String })
+  @ApiQuery({ name: 'brand', required: false, type: String })
+  @ApiQuery({ name: 'model', required: false, type: String })
+  @ApiQuery({ name: 'color', required: false, type: String })
+  @ApiQuery({ name: 'plateNumber', required: false, type: String })
+  @ApiQuery({ name: 'year', required: false, type: String })
+  @ApiQuery({ name: 'query', required: false, type: String })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'List of all cars',
+    description: 'List of filtered cars',
     type: [RentalCar],
   })
-  @ApiResponse({
-    status: HttpStatus.FORBIDDEN,
-    description: 'Forbidden: Only admins can access this',
-  })
-  async findAll(): Promise<RentalCar[]> {
-    return this.carService.findAll();
+  async getCars(
+    @Query('filter') filter: RentalStateOfCar = RentalStateOfCar.AVAILABLE,
+    @Query() queryParams: Partial<RentalCar>,
+    @Req() req: Request & { user?: { id: string; role: Role } }
+  ): Promise<RentalCar[]> {
+    const role = req.user?.role || '';
+    const isAdmin = role === Role.ADMIN || role === Role.SUPER_ADMIN;
+
+    if (
+      (filter === RentalStateOfCar.ALL || filter === RentalStateOfCar.RENTED) &&
+      !isAdmin
+    ) {
+      throw new ForbiddenException('Only admins can access this data');
+    }
+
+    if (filter === RentalStateOfCar.ALL) {
+      return this.carService.findAll();
+    }
+
+    delete queryParams['filter'];
+
+    const isAvailable = filter === RentalStateOfCar.AVAILABLE;
+    return this.rentalService.getFilteredCars(isAvailable, queryParams);
   }
 }

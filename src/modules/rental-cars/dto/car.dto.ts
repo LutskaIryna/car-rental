@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from 'class-validator';
+import { Brand } from '../entities/brand.entity';
+import { Model } from '../entities/model.entity';
 
 export class CreateCarDto {
   @ApiProperty({ example: '1HGCM5526A262224' })
@@ -7,15 +9,15 @@ export class CreateCarDto {
   @IsNotEmpty()
   vin: string;
 
-  @ApiProperty({ example: 'Skoda' })
+  @ApiProperty({ example: '51254093-4bf9-45a1-980a-d69822ffb0ce' })
   @IsString()
   @IsNotEmpty()
-  brand: string;
+  brand_id: string;
 
-  @ApiProperty({ example: 'Octavia' })
+  @ApiProperty({ example: '51254093-4bf9-45a1-980a-d69822ffb0ce' })
   @IsString()
   @IsNotEmpty()
-  model: string;
+  model_id: string;
 
   @ApiProperty({ example: 'red' })
   @IsString()
@@ -33,3 +35,15 @@ export class CreateCarDto {
 }
 
 export class UpdateCarDto extends CreateCarDto {}
+
+export class RentalCarResponseDto {
+  id: string;
+  vin: string;
+  brandId: string;
+  modelId: string;
+  color: string;
+  plateNumber: string;
+  year: string;
+  brand: Brand;
+  model: Model;
+}

@@ -2,13 +2,25 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RentalCar } from '../entities/rental-car.entity';
-import { CreateCarDto, UpdateCarDto } from '../dto/car.dto';
+import {
+  CreateCarDto,
+  RentalCarResponseDto,
+  UpdateCarDto,
+} from '../dto/car.dto';
+import { Brand } from '../entities/brand.entity';
+import { Model } from '../entities/model.entity';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class RentalCarsService {
   constructor(
     @InjectRepository(RentalCar)
-    private carRepository: Repository<RentalCar>
+    private carRepository: Repository<RentalCar>,
+    @InjectRepository(Brand)
+    private readonly brandRepository: Repository<Brand>,
+
+    @InjectRepository(Model)
+    private readonly modelRepository: Repository<Model>
   ) {}
 
   async create(createCarDto: CreateCarDto): Promise<RentalCar> {
@@ -30,8 +42,14 @@ export class RentalCarsService {
     return { message: 'Car deleted', error: null };
   }
 
-  async findAll(): Promise<RentalCar[]> {
-    return this.carRepository.find();
+  async findAll(): Promise<RentalCarResponseDto[]> {
+    const cars = await this.carRepository
+      .createQueryBuilder('car')
+      .leftJoinAndSelect('car.brand', 'brands')
+      .leftJoinAndSelect('car.model', 'models')
+      .getMany();
+
+    return plainToInstance(RentalCarResponseDto, cars);
   }
 
   async findOne(id: string): Promise<RentalCar> {

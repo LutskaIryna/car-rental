@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Brand } from './brand.entity';
+import { Model } from './model.entity';
 
 @Entity('cars')
 export class RentalCar {
@@ -8,11 +16,19 @@ export class RentalCar {
   @Column({ unique: true })
   vin: string;
 
-  @Column({ type: 'text', nullable: true })
-  brand: string;
+  @ManyToOne(() => Brand, (brand) => brand.rentalCars, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'brand_id' })
+  brand: Brand;
 
-  @Column()
-  model: string;
+  @ManyToOne(() => Model)
+  @JoinColumn({ name: 'model_id' })
+  model: Model;
+
+  @Column({ name: 'brand_id', type: 'uuid' })
+  brandId: string;
+
+  @Column({ name: 'model_id', type: 'uuid' })
+  modelId: string;
 
   @Column()
   color: string;

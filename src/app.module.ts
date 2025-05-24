@@ -11,6 +11,8 @@ import { RentalCar } from './modules/rental-cars/entities/rental-car.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { RentalData } from './modules/rental-data/entity/rental-data.entity';
 import { RentalDataModule } from './modules/rental-data/rental-data.module';
+import { Brand } from './modules/rental-cars/entities/brand.entity';
+import { Model } from './modules/rental-cars/entities/model.entity';
 
 @Module({
   imports: [
@@ -27,8 +29,8 @@ import { RentalDataModule } from './modules/rental-data/rental-data.module';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [User, RentalCar, RentalData],
-        synchronize: true,
+        entities: [User, RentalCar, RentalData, Brand, Model],
+        synchronize: false,
       }),
     }),
     JwtModule.registerAsync({

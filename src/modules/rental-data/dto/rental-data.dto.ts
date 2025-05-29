@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { RentalCarResponseDto } from 'src/modules/rental-cars/dto/car.dto';
 
 export class RentalDataDto {
   @ApiProperty({ example: '1HGCM-5526560-26A262-224' })
@@ -48,4 +49,15 @@ export class UpdateRentalDto extends PartialType(RentalDataDto) {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+}
+
+export class RentalDataResponseDto {
+  id: string;
+  userId: string;
+  carId: string;
+  car: RentalCarResponseDto;
+  startDate: Date;
+  endDate: Date | null;
+  isActive: boolean;
+  createdAt: Date;
 }

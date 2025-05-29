@@ -23,7 +23,7 @@ import { Roles } from 'src/modules/auth/decorators/roles.decorator';
 import { Role } from 'src/modules/auth/enums/roles.enum';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
-import { CreateCarDto } from '../dto/car.dto';
+import { CreateCarDto, RentalCarResponseDto } from '../dto/car.dto';
 import { RentalCar } from '../entities/rental-car.entity';
 import { RentalCarsService } from '../services/rental-cars.service';
 import { RentalDataService } from 'src/modules/rental-data/services/rental-data.service';
@@ -100,13 +100,13 @@ export class RentalCarsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'List of filtered cars',
-    type: [RentalCar],
+    type: [RentalCarResponseDto],
   })
   async getCars(
     @Query('filter') filter: RentalStateOfCar = RentalStateOfCar.AVAILABLE,
     @Query() queryParams: Partial<RentalCar>,
     @Req() req: Request & { user?: { id: string; role: Role } }
-  ): Promise<RentalCar[]> {
+  ): Promise<RentalCarResponseDto[]> {
     const role = req.user?.role || '';
     const isAdmin = role === Role.ADMIN || role === Role.SUPER_ADMIN;
 

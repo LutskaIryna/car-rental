@@ -1,15 +1,22 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { RentalDataDto, UpdateRentalDto } from '../dto/rental-data.dto';
+import {
+  RentalDataDto,
+  RentalDataResponseDto,
+  UpdateRentalDto,
+} from '../dto/rental-data.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RentalData } from '../entity/rental-data.entity';
 import { RentalCar } from 'src/modules/rental-cars/entities/rental-car.entity';
 import { Repository } from 'typeorm';
 import { StringUtil } from 'src/shared/utils/string-util/string-util';
+import { RentalCarResponseDto } from 'src/modules/rental-cars/dto/car.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class RentalDataService {
@@ -21,7 +28,7 @@ export class RentalDataService {
     private carRepository: Repository<RentalCar>
   ) {}
 
-  async createRental(dto: RentalDataDto): Promise<RentalData> {
+  async createRental(dto: RentalDataDto): Promise<RentalDataResponseDto> {
     const car = await this.carRepository.findOne({ where: { id: dto.carId } });
 
     if (!car) throw new NotFoundException('Car not found');
@@ -45,7 +52,19 @@ export class RentalDataService {
     }
 
     const rental = this.rentalRepository.create(dto);
-    return this.rentalRepository.save(rental);
+    const saved = await this.rentalRepository.save(rental);
+    const result = await this.rentalRepository
+      .createQueryBuilder('rental')
+      .leftJoinAndSelect('rental.car', 'car')
+      .leftJoinAndSelect('car.brand', 'brand')
+      .leftJoinAndSelect('car.model', 'model')
+      .where('rental.id = :id', { id: saved.id })
+      .getOne();
+
+    if (!result) {
+      throw new NotFoundException('Rental not found after creation');
+    }
+    return plainToInstance(RentalDataResponseDto, result);
   }
 
   async updateRental(
@@ -71,14 +90,17 @@ export class RentalDataService {
   async getFilteredCars(
     isAvailableCars: boolean,
     filters: Partial<RentalCar> & { query?: string } = {}
-  ): Promise<RentalCar[]> {
+  ): Promise<RentalCarResponseDto[]> {
     const rentedCars = await this.rentalRepository.find({
       where: { isActive: true },
       select: ['carId'],
     });
     const carIds = rentedCars.map((rental) => rental.carId);
 
-    const qb = this.carRepository.createQueryBuilder('car');
+    const qb = this.carRepository
+      .createQueryBuilder('car')
+      .leftJoinAndSelect('car.brand', 'brands')
+      .leftJoinAndSelect('car.model', 'models');
 
     if (isAvailableCars) {
       qb.where('car.id NOT IN (:...carIds)', {
@@ -94,6 +116,10 @@ export class RentalDataService {
 
     Object.entries(restFilters).forEach(([key, value]) => {
       if (value) {
+        if (typeof value !== 'string') {
+          throw new BadRequestException(`Filter "${key}" must be a string`);
+        }
+
         qb.andWhere(`car.${key} ILIKE :${key}`, {
           [key]: `%${value}%`,
         });
@@ -112,12 +138,13 @@ export class RentalDataService {
   }
 
   async getActiveRentalByUser(userId: string): Promise<RentalData[]> {
-    return this.rentalRepository.find({
-      where: {
-        userId,
-        isActive: true,
-      },
-      relations: ['car'],
-    });
+    return this.rentalRepository
+      .createQueryBuilder('rental')
+      .leftJoinAndSelect('rental.car', 'car')
+      .leftJoinAndSelect('car.brand', 'brand')
+      .leftJoinAndSelect('car.model', 'model')
+      .where('rental.userId = :userId', { userId })
+      .andWhere('rental.isActive = true')
+      .getMany();
   }
 }

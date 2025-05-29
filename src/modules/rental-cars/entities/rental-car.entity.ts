@@ -24,12 +24,6 @@ export class RentalCar {
   @JoinColumn({ name: 'model_id' })
   model: Model;
 
-  @Column({ name: 'brand_id', type: 'uuid' })
-  brandId: string;
-
-  @Column({ name: 'model_id', type: 'uuid' })
-  modelId: string;
-
   @Column()
   color: string;
 

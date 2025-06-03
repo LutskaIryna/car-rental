@@ -12,12 +12,12 @@ export class CreateCarDto {
   @ApiProperty({ example: '51254093-4bf9-45a1-980a-d69822ffb0ce' })
   @IsString()
   @IsNotEmpty()
-  brand_id: string;
+  brandId: string;
 
   @ApiProperty({ example: '51254093-4bf9-45a1-980a-d69822ffb0ce' })
   @IsString()
   @IsNotEmpty()
-  model_id: string;
+  modelId: string;
 
   @ApiProperty({ example: 'red' })
   @IsString()
@@ -39,8 +39,6 @@ export class UpdateCarDto extends CreateCarDto {}
 export class RentalCarResponseDto {
   id: string;
   vin: string;
-  brandId: string;
-  modelId: string;
   color: string;
   plateNumber: string;
   year: string;

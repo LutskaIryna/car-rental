@@ -24,7 +24,13 @@ export class RentalCarsService {
   ) {}
 
   async create(createCarDto: CreateCarDto): Promise<RentalCar> {
-    const car = this.carRepository.create(createCarDto);
+    const { brandId, modelId, ...rest } = createCarDto;
+
+    const brand = plainToInstance(Brand, { id: brandId });
+    const model = plainToInstance(Model, { id: modelId });
+    const car = this.carRepository.create({ ...rest });
+    car.brand = brand;
+    car.model = model;
     return await this.carRepository.save(car);
   }
 

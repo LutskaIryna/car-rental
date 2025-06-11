@@ -126,4 +126,16 @@ export class RentalCarsController {
     const isAvailable = filter === RentalStateOfCar.AVAILABLE;
     return this.rentalService.getFilteredCars(isAvailable, queryParams);
   }
+
+  @Get('colors')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get unique car colors (case-insensitive)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'List of unique car colors',
+    type: [String],
+  })
+  async getCarColors(): Promise<string[]> {
+    return this.carService.getUniqueColors();
+  }
 }

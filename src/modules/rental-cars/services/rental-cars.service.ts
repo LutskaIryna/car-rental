@@ -15,12 +15,7 @@ import { plainToInstance } from 'class-transformer';
 export class RentalCarsService {
   constructor(
     @InjectRepository(RentalCar)
-    private carRepository: Repository<RentalCar>,
-    @InjectRepository(Brand)
-    private readonly brandRepository: Repository<Brand>,
-
-    @InjectRepository(Model)
-    private readonly modelRepository: Repository<Model>
+    private carRepository: Repository<RentalCar>
   ) {}
 
   async create(createCarDto: CreateCarDto): Promise<RentalCar> {
@@ -29,6 +24,7 @@ export class RentalCarsService {
     const brand = plainToInstance(Brand, { id: brandId });
     const model = plainToInstance(Model, { id: modelId });
     const car = this.carRepository.create({ ...rest });
+
     car.brand = brand;
     car.model = model;
     return await this.carRepository.save(car);
@@ -62,5 +58,15 @@ export class RentalCarsService {
     const car = await this.carRepository.findOne({ where: { id } });
     if (!car) throw new NotFoundException(`Car with id ${id} not found`);
     return car;
+  }
+
+  async getUniqueColors(): Promise<string[]> {
+    const result: { color: string }[] = await this.carRepository
+      .createQueryBuilder('car')
+      .select('LOWER(car.color)', 'color')
+      .distinct(true)
+      .getRawMany();
+
+    return result.map((row: { color: string }) => row.color);
   }
 }

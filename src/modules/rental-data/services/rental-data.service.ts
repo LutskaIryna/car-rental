@@ -115,11 +115,17 @@ export class RentalDataService {
     const { query, ...restFilters } = filters;
 
     Object.entries(restFilters).forEach(([key, value]) => {
-      if (value) {
-        if (typeof value !== 'string') {
-          throw new BadRequestException(`Filter "${key}" must be a string`);
-        }
+      if (!value) return;
 
+      if (typeof value !== 'string') {
+        throw new BadRequestException(`Filter "${key}" must be a string`);
+      }
+
+      if (key === 'brandId') {
+        qb.andWhere('brands.id = :brandId', { brandId: value });
+      } else if (key === 'modelId') {
+        qb.andWhere('models.id = :modelId', { modelId: value });
+      } else {
         qb.andWhere(`car.${key} ILIKE :${key}`, {
           [key]: `%${value}%`,
         });

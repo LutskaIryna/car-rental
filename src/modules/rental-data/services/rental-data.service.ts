@@ -14,7 +14,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RentalData } from '../entity/rental-data.entity';
 import { RentalCar } from 'src/modules/rental-cars/entities/rental-car.entity';
 import { Repository } from 'typeorm';
-import { StringUtil } from 'src/shared/utils/string-util/string-util';
 import { RentalCarResponseDto } from 'src/modules/rental-cars/dto/car.dto';
 import { plainToInstance } from 'class-transformer';
 
@@ -132,13 +131,9 @@ export class RentalDataService {
       }
     });
 
-    const searchTerms = StringUtil.createSearchTerms(query || '');
-
-    if (searchTerms) {
-      qb.andWhere(`car.search_vector @@ to_tsquery('simple', :query)`, {
-        query: searchTerms,
-      });
-    }
+    qb.andWhere(`(brands.name ILIKE :query OR models.name ILIKE :query)`, {
+      query: `%${query || ''}%`,
+    });
 
     return qb.getMany();
   }

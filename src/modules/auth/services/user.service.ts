@@ -1,15 +1,21 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { PasswordService } from 'src/modules/auth/services/password.service';
 import { Role } from '../enums/roles.enum';
+import { RentalDataService } from 'src/modules/rental-data/services/rental-data.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private rentalDataService: RentalDataService,
     private passwordService: PasswordService
   ) {}
 
@@ -51,7 +57,7 @@ export class UserService {
   }
 
   async getUsers(): Promise<User[]> {
-    return this.userRepository.find();
+    return this.userRepository.find({ where: { role: Role.USER } });
   }
 
   async getUserRefreshToken(userId: string): Promise<string | null> {
@@ -70,5 +76,19 @@ export class UserService {
 
   async update(user: Partial<User>) {
     return await this.userRepository.update(user.id as string, user);
+  }
+
+  async remove(id: string) {
+    const isRentalExist = this.rentalDataService.getActiveRentalByUser(id);
+    if (await isRentalExist) {
+      throw new BadRequestException(
+        `User has an active rental and cannot be deleted`
+      );
+    }
+    const result = await this.userRepository.softDelete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return { message: 'User is deleted', error: null };
   }
 }

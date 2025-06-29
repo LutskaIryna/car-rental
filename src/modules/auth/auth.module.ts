@@ -6,10 +6,9 @@ import { UserService } from './services/user.service';
 import { PasswordService } from './services/password.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { RentalDataModule } from '../rental-data/rental-data.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), RentalDataModule],
+  imports: [TypeOrmModule.forFeature([User])],
   controllers: [AuthController, UserController],
   providers: [AuthService, UserService, PasswordService],
   exports: [],

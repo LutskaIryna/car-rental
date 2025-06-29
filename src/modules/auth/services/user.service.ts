@@ -8,14 +8,14 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { PasswordService } from 'src/modules/auth/services/password.service';
 import { Role } from '../enums/roles.enum';
-import { RentalDataService } from 'src/modules/rental-data/services/rental-data.service';
+import EventEmitter2 from 'eventemitter2';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private rentalDataService: RentalDataService,
+    private eventEmitter: EventEmitter2,
     private passwordService: PasswordService
   ) {}
 
@@ -79,12 +79,17 @@ export class UserService {
   }
 
   async remove(id: string) {
-    const isRentalExist = this.rentalDataService.getActiveRentalByUser(id);
-    if ((await isRentalExist).length) {
-      throw new BadRequestException(
-        `User has an active rental and cannot be deleted`
-      );
+    const listnersResults = await this.eventEmitter.emitAsync(
+      'user.before.delete',
+      {
+        userId: id,
+      }
+    );
+
+    if (listnersResults?.length) {
+      throw new BadRequestException(listnersResults[0]);
     }
+
     const result = await this.userRepository.softDelete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`User with id ${id} not found`);

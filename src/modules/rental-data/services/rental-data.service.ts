@@ -13,7 +13,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { RentalData } from '../entity/rental-data.entity';
 import { RentalCar } from 'src/modules/rental-cars/entities/rental-car.entity';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { RentalCarResponseDto } from 'src/modules/rental-cars/dto/car.dto';
 import { plainToInstance } from 'class-transformer';
 
@@ -120,15 +120,7 @@ export class RentalDataService {
         throw new BadRequestException(`Filter "${key}" must be a string`);
       }
 
-      if (key === 'brandId') {
-        qb.andWhere('brands.id = :brandId', { brandId: value });
-      } else if (key === 'modelId') {
-        qb.andWhere('models.id = :modelId', { modelId: value });
-      } else {
-        qb.andWhere(`car.${key} ILIKE :${key}`, {
-          [key]: `%${value}%`,
-        });
-      }
+      this.filterByKey(qb, key, value);
     });
 
     qb.andWhere(`(brands.name ILIKE :query OR models.name ILIKE :query)`, {
@@ -148,4 +140,25 @@ export class RentalDataService {
       .andWhere('rental.isActive = true')
       .getMany();
   }
+
+  private filterByKey = (
+    qb: SelectQueryBuilder<RentalCar>,
+    key: string,
+    value: string
+  ) => {
+    const keyCases: Record<
+      string,
+      (qb: SelectQueryBuilder<RentalCar>) => SelectQueryBuilder<RentalCar>
+    > = {
+      brandId: (qb) => qb.andWhere('brands.id = :brandId', { brandId: value }),
+      modelId: (qb) => qb.andWhere('models.id = :modelId', { modelId: value }),
+      default: (qb) =>
+        qb.andWhere(`car.${key} ILIKE :${key}`, {
+          [key]: `%${value}%`,
+        }),
+    };
+
+    const keyCase = ['brandId', 'modelId'].includes(key) ? key : 'default';
+    return keyCases[keyCase](qb);
+  };
 }

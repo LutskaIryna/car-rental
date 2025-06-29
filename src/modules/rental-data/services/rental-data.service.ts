@@ -13,8 +13,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { RentalData } from '../entity/rental-data.entity';
 import { RentalCar } from 'src/modules/rental-cars/entities/rental-car.entity';
-import { Repository } from 'typeorm';
-import { StringUtil } from 'src/shared/utils/string-util/string-util';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { RentalCarResponseDto } from 'src/modules/rental-cars/dto/car.dto';
 import { plainToInstance } from 'class-transformer';
 
@@ -115,24 +114,18 @@ export class RentalDataService {
     const { query, ...restFilters } = filters;
 
     Object.entries(restFilters).forEach(([key, value]) => {
-      if (value) {
-        if (typeof value !== 'string') {
-          throw new BadRequestException(`Filter "${key}" must be a string`);
-        }
+      if (!value) return;
 
-        qb.andWhere(`car.${key} ILIKE :${key}`, {
-          [key]: `%${value}%`,
-        });
+      if (typeof value !== 'string') {
+        throw new BadRequestException(`Filter "${key}" must be a string`);
       }
+
+      this.filterByKey(qb, key, value);
     });
 
-    const searchTerms = StringUtil.createSearchTerms(query || '');
-
-    if (searchTerms) {
-      qb.andWhere(`car.search_vector @@ to_tsquery('simple', :query)`, {
-        query: searchTerms,
-      });
-    }
+    qb.andWhere(`(brands.name ILIKE :query OR models.name ILIKE :query)`, {
+      query: `%${query || ''}%`,
+    });
 
     return qb.getMany();
   }
@@ -147,4 +140,25 @@ export class RentalDataService {
       .andWhere('rental.isActive = true')
       .getMany();
   }
+
+  private filterByKey = (
+    qb: SelectQueryBuilder<RentalCar>,
+    key: string,
+    value: string
+  ) => {
+    const keyCases: Record<
+      string,
+      (qb: SelectQueryBuilder<RentalCar>) => SelectQueryBuilder<RentalCar>
+    > = {
+      brandId: (qb) => qb.andWhere('brands.id = :brandId', { brandId: value }),
+      modelId: (qb) => qb.andWhere('models.id = :modelId', { modelId: value }),
+      default: (qb) =>
+        qb.andWhere(`car.${key} ILIKE :${key}`, {
+          [key]: `%${value}%`,
+        }),
+    };
+
+    const keyCase = ['brandId', 'modelId'].includes(key) ? key : 'default';
+    return keyCases[keyCase](qb);
+  };
 }

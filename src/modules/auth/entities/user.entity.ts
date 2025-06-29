@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { Role } from '../enums/roles.enum';
 
@@ -32,4 +33,7 @@ export class User {
 
   @Column({ type: 'text', nullable: true })
   refreshToken: string | null;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 }

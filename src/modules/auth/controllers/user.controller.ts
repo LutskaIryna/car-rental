@@ -8,6 +8,8 @@ import {
   Get,
   Req,
   NotFoundException,
+  Delete,
+  Param,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import {
@@ -15,6 +17,7 @@ import {
   ApiBearerAuth,
   ApiTags,
   ApiResponse,
+  ApiParam,
 } from '@nestjs/swagger';
 import { RegisterDTO } from '../dto/register.dto';
 import { Role } from '../enums/roles.enum';
@@ -80,9 +83,29 @@ export class UserController {
   @Get('')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
-  @ApiOperation({ summary: 'Get all users' })
+  @ApiOperation({ summary: 'Get users' })
   @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
   async getUsers() {
     return this.userService.getUsers();
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Delete a user' })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden: Only admins can delete user',
+  })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Car deleted' })
+  @ApiParam({
+    name: 'id',
+    example: 'a3b1c2d3-e456-7890-abcd-1234567890ab',
+    description: 'User ID (UUID format)',
+  })
+  async remove(
+    @Param('id') id: string
+  ): Promise<{ message: string; error: null }> {
+    return this.userService.remove(id);
   }
 }

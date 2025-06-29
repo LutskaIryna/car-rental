@@ -12,5 +12,6 @@ import { Model } from '../rental-cars/entities/model.entity';
   imports: [TypeOrmModule.forFeature([RentalData, RentalCar, Brand, Model])],
   controllers: [RentalDataController],
   providers: [RentalDataService, RentalCarsService],
+  exports: [RentalDataService],
 })
 export class RentalDataModule {}

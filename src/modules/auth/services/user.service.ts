@@ -80,7 +80,7 @@ export class UserService {
 
   async remove(id: string) {
     const isRentalExist = this.rentalDataService.getActiveRentalByUser(id);
-    if (await isRentalExist) {
+    if ((await isRentalExist).length) {
       throw new BadRequestException(
         `User has an active rental and cannot be deleted`
       );
